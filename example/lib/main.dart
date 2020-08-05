@@ -374,7 +374,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
     try {
       _user = await userService.signUp(_user.email, _user.password, _user.name);
       signUpSuccess = true;
-      message = 'User sign up successful!';
     } on CognitoClientException catch (e) {
       if (e.code == 'UsernameExistsException' ||
           e.code == 'InvalidParameterException' ||
@@ -671,9 +670,6 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       _user = await _userService.login(_user.email, _user.password);
       message = 'User sucessfully logged in!';
-      if (!_user.confirmed) {
-        message = 'Please confirm user account';
-      }
     } on CognitoClientException catch (e) {
       if (e.code == 'InvalidParameterException' ||
           e.code == 'NotAuthorizedException' ||
@@ -684,7 +680,11 @@ class _LoginScreenState extends State<LoginScreen> {
         message = 'An unknown client error occured';
       }
     } catch (e) {
-      message = 'An unknown error occurred';
+      if (!_user.confirmed) {
+        message = 'Please confirm user account';
+      } else {
+        message = 'An unknown error occurred';
+      }
     }
     final snackBar = SnackBar(
       content: Text(message),
@@ -693,14 +693,13 @@ class _LoginScreenState extends State<LoginScreen> {
         onPressed: () async {
           if (_user.hasAccess) {
             Navigator.pop(context);
-            if (!_user.confirmed) {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) =>
-                        ConfirmationScreen(email: _user.email)),
-              );
-            }
+          }
+          if (!_user.confirmed) {
+            await Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => ConfirmationScreen(email: _user.email)),
+            );
           }
         },
       ),
